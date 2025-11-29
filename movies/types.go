@@ -1,5 +1,11 @@
 package movies
 
+import (
+	"bytes"
+	"html/template"
+	"log"
+)
+
 type Movie struct {
 	Adult        bool   `json:"adult"`
 	BackdropPath string `json:"backdrop_path"`
@@ -24,4 +30,20 @@ func NewMovie() *Movie {
 type MovieFilter struct {
 	Popularity  float32
 	VoteAverage float32
+}
+
+func (m *Movie) String() string {
+	const response = `
+Title: {{.Title}}
+Release: {{.ReleaseDate}}
+Overview: {{.Overview}}
+Popularity: {{.Popularity}}
+VoteAverage: {{.VoteAverage}}
+`
+	t := template.Must(template.New("movie").Parse(response))
+	var tpl bytes.Buffer
+	if err := t.Execute(&tpl, m); err != nil {
+		log.Println(err)
+	}
+	return tpl.String()
 }
