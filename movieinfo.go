@@ -5,26 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 )
 
 type V struct {
 	Results []movies.Movie `json:"results"`
 }
 
-//	func PrintMovieInfo() {
-//		if len(v.Results) > 0 {
-//			mv := v.Results[0]
-//			fmt.Printf("%s %s\n", mv.Title, mv.ReleaseDate)
-//			fmt.Println(mv.Overview)
-//			fmt.Println(mv.Popularity, mv.VoteAverage)
-//			fmt.Println("================================")
-//		}
-//	}
 func main() {
-	var v V
+	if len(os.Args) < 3 {
+		log.Println("Not enough arguments")
+		log.Fatal("Usage: movieinfo <filename> <good|bad|not_found>")
+	}
+	filename := os.Args[1]
+	option := os.Args[2]
 	var found []movies.Movie
+	var goodRatings []movies.Movie
+	var badRatings []movies.Movie
 	var notFound []string
-	filename := "data/movies-02.txt"
+	var v V
+
 	lines, err := movies.ParseFile(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +34,7 @@ func main() {
 		resp := movies.CallApi(title, bearer)
 		err := json.Unmarshal(resp, &v)
 		if err != nil {
-			log.Printf("Error unmarshaling: %v\n", err)
+			//log.Printf("Error unmarshaling: %s %v\n", title, err)
 		}
 		if len(v.Results) > 0 {
 			found = append(found, v.Results[0])
@@ -43,8 +43,34 @@ func main() {
 		}
 	}
 	fmt.Println("Found", len(found), "Movies")
-	fmt.Println("Not Found", len(notFound), "Movies")
-	for _, title := range notFound {
-		fmt.Println(title)
+
+	for _, mv := range found {
+		if mv.Popularity > 5.0 {
+			goodRatings = append(goodRatings, mv)
+
+		} else {
+			badRatings = append(badRatings, mv)
+		}
 	}
+	switch option {
+	case "good":
+		for _, mv := range goodRatings {
+			fmt.Printf("%s %s\n", mv.Title, mv.ReleaseDate)
+			fmt.Println(mv.Overview)
+			fmt.Println(mv.Popularity)
+			fmt.Println("================================")
+		}
+	case "bad":
+		for _, mv := range goodRatings {
+			fmt.Printf("%s %s\n", mv.Title, mv.ReleaseDate)
+			fmt.Println(mv.Overview)
+			fmt.Println(mv.Popularity)
+			fmt.Println("================================")
+		}
+	case "not_found":
+		for _, title := range notFound {
+			fmt.Println(title)
+		}
+	}
+
 }

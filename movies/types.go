@@ -20,3 +20,8 @@ type Movie struct {
 func NewMovie() *Movie {
 	return &Movie{}
 }
+
+type MovieFilter struct {
+	Popularity  float32
+	VoteAverage float32
+}
