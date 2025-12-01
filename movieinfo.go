@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 type V struct {
@@ -13,19 +14,24 @@ type V struct {
 }
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 4 {
 		log.Println("Not enough arguments")
-		log.Fatal("Usage: movieinfo <filename> <good|bad|not_found>")
+		log.Fatal("Usage: movieinfo <filename> <good|bad|not_found> <threshold>")
 	}
 	filename := os.Args[1]
 	option := os.Args[2]
+	threshold, err := strconv.ParseFloat(os.Args[3], 32)
+	if err != nil {
+		log.Println("Wrong threshold,setting default to 5")
+		threshold = 5.0
+	}
 	found := make(map[string]movies.Movie)
 	var goodRatings []movies.Movie
 	var badRatings []movies.Movie
 	var notFound []string
 	var v V
 
-	lines, err := movies.ParseFile(filename)
+	lines, err := movies.ParseFile(filename, "/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +40,7 @@ func main() {
 		resp := movies.CallApi(title, bearer)
 		err := json.Unmarshal(resp, &v)
 		if err != nil {
-			//log.Printf("Error unmarshaling: %s %v\n", title, err)
+			log.Printf("Error unmarshaling: %s %v\n", title, err)
 		}
 		if len(v.Results) > 0 {
 			var maxPopularity float32
@@ -45,15 +51,15 @@ func main() {
 					selectedMovie = result
 				}
 			}
+			selectedMovie.FilePath = title
 			found[selectedMovie.Title] = selectedMovie
 		} else {
 			notFound = append(notFound, title)
 		}
 	}
-	fmt.Println("Found", len(found), "Movies")
 
 	for _, mv := range found {
-		if mv.VoteAverage > 5.0 {
+		if mv.VoteAverage > threshold {
 			goodRatings = append(goodRatings, mv)
 
 		} else {
@@ -75,8 +81,9 @@ func main() {
 		for _, title := range notFound {
 			fmt.Println(title)
 		}
-		fmt.Printf("Total not found movies: %d\n", len(notFound))
-
 	}
+	fmt.Println("Total", len(lines), "Movies checked")
+	fmt.Printf("Found %d movies\n", len(found))
+	fmt.Printf("Not found %d movies\n", len(notFound))
 
 }

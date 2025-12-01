@@ -7,9 +7,8 @@ import (
 )
 
 type Movie struct {
-	Adult        bool   `json:"adult"`
-	BackdropPath string `json:"backdrop_path"`
-	//GenreIds         []string `json:"genre_ids"`
+	Adult            bool    `json:"adult"`
+	BackdropPath     string  `json:"backdrop_path"`
 	Id               string  `json:"id"`
 	OriginalLanguage string  `json:"original_language"`
 	OriginalTitle    string  `json:"original_title"`
@@ -19,8 +18,9 @@ type Movie struct {
 	ReleaseDate      string  `json:"release_date"`
 	Title            string  `json:"title"`
 	Video            bool    `json:"video"`
-	VoteAverage      float32 `json:"vote_average"`
+	VoteAverage      float64 `json:"vote_average"`
 	VoteCount        int     `json:"vote_count"`
+	FilePath         string
 }
 
 func NewMovie() *Movie {
@@ -28,8 +28,8 @@ func NewMovie() *Movie {
 }
 
 type MovieFilter struct {
-	Popularity  float32
-	VoteAverage float32
+	Popularity  float64
+	VoteAverage float64
 }
 
 func (m *Movie) String() string {
@@ -39,6 +39,7 @@ Release: {{.ReleaseDate}}
 Overview: {{.Overview}}
 Popularity: {{.Popularity}}
 VoteAverage: {{.VoteAverage}}
+FilePath: {{.FilePath}}
 `
 	t := template.Must(template.New("movie").Parse(response))
 	var tpl bytes.Buffer
